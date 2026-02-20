@@ -7204,6 +7204,7 @@ name = "word-doc-qa"
 version = "0.1.0"
 dependencies = [
  "burn",
+ "burn-ndarray",
  "docx-rs",
  "serde",
  "serde_json",
