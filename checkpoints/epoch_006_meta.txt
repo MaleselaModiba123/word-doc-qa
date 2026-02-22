@@ -1,0 +1,3 @@
+epoch=6
+train_loss=0.001196
+val_loss=0.000651

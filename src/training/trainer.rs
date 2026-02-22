@@ -36,7 +36,8 @@ fn compute_correct<B: Backend>(
     labels: Tensor<B, 1, Int>,
 ) -> usize {
     let [batch_size, _] = logits.dims();
-    let predictions = logits.argmax(1).reshape([batch_size]);
+    // argmax returns [batch, 1] in Burn 0.20.1, flatten to [batch]
+    let predictions = logits.argmax(1).flatten::<1>(0, 1);
     let eq = predictions.equal(labels);
     let sum: i32 = eq.int().sum().into_scalar().elem();
     sum as usize
