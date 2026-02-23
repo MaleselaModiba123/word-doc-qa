@@ -145,11 +145,11 @@ impl<B: Backend> QATransformer<B> {
         let start_logits = logits
             .clone()
             .slice([0..batch, 0..seq_len, 0..1])
-            .squeeze::<2>(); // [batch, seq_len]
+            .flatten::<2>(1,2); // [batch, seq_len]
 
         let end_logits = logits
             .slice([0..batch, 0..seq_len, 1..2])
-            .squeeze::<2>(); // [batch, seq_len]
+            .flatten::<2>(1,2); // [batch, seq_len]
 
         (start_logits, end_logits)
     }
