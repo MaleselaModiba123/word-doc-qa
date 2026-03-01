@@ -112,6 +112,37 @@ pub fn load_multiple_docx(paths: &[&str]) -> Result<String, Box<dyn std::error::
 
     Ok(combined)
 }
+/// Extracts only meaningful event lines from calendar text
+/// Filters out day headers, date numbers, and grid structure
+pub fn extract_events(text: &str) -> String {
+    let day_names = ["SUNDAY","MONDAY","TUESDAY","WEDNESDAY",
+        "THURSDAY","FRIDAY","SATURDAY"];
+
+    let mut events = Vec::new();
+
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() { continue; }
+
+        // Skip lines with 2+ day names (calendar grid headers)
+        let day_count = day_names.iter()
+            .filter(|d| trimmed.contains(*d))
+            .count();
+        if day_count >= 2 { continue; }
+
+        // Count meaningful words (longer than 2 chars, not pure numbers)
+        let words: Vec<&str> = trimmed.split_whitespace().collect();
+        let meaningful = words.iter()
+            .filter(|w| w.len() > 2 && !w.chars().all(|c| c.is_numeric()))
+            .count();
+
+        if meaningful >= 2 {
+            events.push(trimmed.to_string());
+        }
+    }
+
+    events.join("\n")
+}
 
 #[cfg(test)]
 mod tests {

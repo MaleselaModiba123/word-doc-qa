@@ -64,6 +64,7 @@ fn main() {
     println!("=== Word Doc Q&A System ===\n");
 
     let combined_text = load_documents();
+    println!("{}", &combined_text[..2000.min(combined_text.len())]);
     println!("\nTotal text: {} chars\n", combined_text.len());
 
     let device: <InferBackend as burn::tensor::backend::Backend>::Device = Default::default();
@@ -161,6 +162,8 @@ fn main() {
 
         "test" | _ => {
             println!("Mode: TEST\n");
+    println!("--- First 2000 chars of document text ---");
+    println!("{}", &combined_text[..2000.min(combined_text.len())]);
             use burn::tensor::{Tensor, Int};
             let model = model_config.init::<InferBackend>(&device);
             let dummy = Tensor::<InferBackend, 2, Int>::zeros([2, 16], &device);
