@@ -1,6 +1,8 @@
-# SEG 580S: Software Engineering Deep learning System Trainging on CPUT Data
+# SEG 580S Project Report: Document Question Answering on CPUT Data
 
-**Student:** Malesela Modiba (222140275)
+**Student:** Malesela Modiba
+
+This report records the original course experiment. The [README](../README.md) describes the current demo and its setup.
 
 ---
 
@@ -23,9 +25,9 @@ The system is implemented entirely in Rust using the Burn deep learning framewor
 1. Data loading — `.docx` files are read and text is extracted including table content
 2. Data processing — text is chunked and tokenized into Q&A training pairs
 3. Model Training — a transformer encoder is trained on the Q&A pairs
-4. Interface — the trained model ranks context chunks by relevance, and a keyword extraction layer retrieves the final answer
+4. Interface — the command-line application retrieves a text excerpt using keyword matching.
 
-The approach combines neural relevance scoring with deterministic keyword extraction, which produces reliable answers on domain-specific calendar documents.
+The transformer is trained to predict answer span positions. The current CLI uses keyword matching to select an excerpt and does not use model predictions to rank text or extract answers.
 
 ### 1.3 Key Design Decsions
 
@@ -33,9 +35,7 @@ The approach combines neural relevance scoring with deterministic keyword extrac
 
 **Transformer Encoder for Q&A**: Rather than a generative model, a span-extraction architecture is used. This model outputs start and end position logits over the input sequence, which is the same approach used by BERT-based Q&A models.
 
-**Sliding Window Chucking**: Documents are split into overlapping 60-word batches with 15 word overlap during inference. This ensures no answer spans are cut at batch boundsries.
-
-**Hybrid Retrieval**: The neural model guides which batch of the document is most relevent. A keyword matching layer then extracts the most specific matching sentence from that batch. This hybrid approach is more robust than either approach alone on small training datasets.
+**Sliding Window Chunking:** During inference, the code splits the document text into 120-word chunks with a 30-word overlap.
 
 ## 2. Implementation
 
@@ -201,11 +201,11 @@ Checkpoints are saved every 2 epochs. The best model (lowest validation loss) is
 - Best validation loss: 0.000438
 - Final training accuracy: 100%
 - Final validation accuracy: 100%
-- Total training time: ~8.2 hours on CPU (29.901 seconds in total)
+- Total training time: ~8.1 hours on CPU (about 29,100 seconds in total)
 
 # Training Behaviour
 
-Epoch 1 shows a high training loss of 0.6625 — this is expected as the model starts from random weights. From epoch 2 onwards training loss drops sharply to 0.0026 and training accuracy reaches 100%, showing rapid convergence after the first epoch. Validation loss decreased consistently from 0.0016 to 0.0004 across all 10 epochs with no signs of overfitting — validation accuracy reached 100% from epoch 2 and held steady. The long per-epoch duration (~45 minutes each) is expected for a 12.7M parameter model running entirely on CPU without GPU acceleration.
+Epoch 1 shows a high training loss of 0.6625 — this is expected as the model starts from random weights. From epoch 2 onwards training loss drops sharply to 0.0026 and training accuracy reaches 100%, showing rapid convergence after the first epoch. Validation loss decreased consistently from 0.0016 to 0.0004 across all 10 epochs on the generated validation split. The recorded validation accuracy was 100% from epoch 1. These metrics do not establish how well the system generalises to new questions or documents. The long per-epoch duration (~45 minutes each) is expected for a 12.7M parameter model running entirely on CPU without GPU acceleration.
 
 # 3.2 Model Performance
 
@@ -230,9 +230,7 @@ The following 5 questions were run against the trained model using `cargo run --
 
 ## Analysis of What Works Well
 
-The system reliably identifies the correct document chunk for a given question. The keyword-relevance scoring in `score_relevance()` effectively matches question terms to calendar event descriptions. Questions about specific events (graduation, HDC meetings, management committees) are answered correctly because those terms appear directly in the calendar text.
-
-The hybrid architecture (neural chunk selection + keyword sentence extraction) is well suited to this domain. The neural model learns the structure of Q&A pairs while the keyword layer handles the precision of final answer extraction.
+The keyword search can surface relevant text when the question shares terms with a calendar entry. In Q2 the excerpt contains the recorded HDC meeting count, alongside unrelated calendar text. The five examples also show how often a retrieved excerpt can miss the requested date or year.
 
 ## Analysis of Failure Cases
 
